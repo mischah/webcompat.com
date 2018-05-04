@@ -18,6 +18,7 @@ function BugForm() {
   this.submitTypeInput = $("#submit_type:hidden");
   this.uploadLabel = $(".js-label-upload");
   this.uploadLoader = $(".js-image-loader");
+  this.urlParamRegExp = /url=([^&]*)/;
 
   this.UPLOAD_LIMIT = 1024 * 1024 * 4;
 
@@ -87,7 +88,12 @@ function BugForm() {
     this.onReceiveMessage = this.onReceiveMessage.bind(this);
     this.preventSubmitByEnter = this.preventSubmitByEnter.bind(this);
 
-    this.checkParams();
+    // Make sure we're not getting a report
+    // about our own site before checking params.
+    if (!this.isSelfReport()) {
+      this.checkParams();
+    }
+
     this.disableSubmits();
     this.urlField.on("blur input", this.checkURLValidity);
     this.descField.on("blur input", this.checkDescriptionValidity);
@@ -116,7 +122,12 @@ function BugForm() {
   };
 
   this.onReceiveMessage = function(event) {
-    // Make sure the data is coming from ~*inside the house*~!
+    // We're getting a report about our own site, so let's bail.
+    if (this.isSelfReport()) {
+      return false;
+    }
+
+    // Make sure the data is coming from a trusted source.
     // (i.e., our add-on or some other priviledged code sent it)
     if (location.origin === event.origin) {
       // See https://github.com/webcompat/webcompat.com/issues/1252 to track
@@ -182,6 +193,17 @@ function BugForm() {
     img.src = dataURI;
   };
 
+  // Is the user trying to report a site against webcompat.com itself?
+  this.isSelfReport = function() {
+    var url = location.href.match(this.urlParamRegExp);
+    if (url !== null) {
+      if (_.includes(decodeURIComponent(url[0]), location.origin)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   // Do some extra work based on the GET params that come with the request
   this.checkParams = function() {
     // Don't bother doing any work for bare requests.
@@ -189,11 +211,10 @@ function BugForm() {
       return;
     }
 
-    var urlParam = location.href.match(/url=([^&]*)/);
-    if (urlParam !== null) {
-      // weird Gecko bug. See https://bugzilla.mozilla.org/show_bug.cgi?id=1098037
-      urlParam = this.trimWyciwyg(urlParam[1]);
-      this.urlField.val(decodeURIComponent(urlParam));
+    var url = location.href.match(this.urlParamRegExp);
+    if (url !== null) {
+      url = this.trimWyciwyg(decodeURIComponent(url[1]));
+      this.urlField.val(url);
       this.makeValid("url");
     }
 
