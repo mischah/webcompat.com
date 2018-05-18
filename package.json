@@ -67,7 +67,7 @@
     "build:svg:svg-sprite": "svg-sprite-generate -d ./webcompat/static/img/svg/tmp -o ./webcompat/static/img/svg/sprite.svg",
     "jst": "grunt jst",
     "lint": "npm run lint:js && npm run lint:css",
-    "lint:js": "eslint ./Gruntfile.js ./tests ./grunt-tasks ./webcompat/static/js/lib",
+    "lint:js": "eslint --cache ./Gruntfile.js ./tests ./grunt-tasks ./webcompat/static/js/lib",
     "lint:css": "stylelint './webcompat/static/css/src/**/*.css' './webcompat/static/css/webcompat.dev.css'",
     "lint:fix": "npm run lint:fix:js && npm run lint:fix:css",
     "lint:fix:js": "npm run lint:js -- --fix",
